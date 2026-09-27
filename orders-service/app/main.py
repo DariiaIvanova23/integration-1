@@ -33,6 +33,15 @@ FORECAST_TIMEOUT = float(
     os.getenv("FORECAST_TIMEOUT", "3.0")
 )
 
+PROPERTY_FIELDS = {
+    "gr_liv_area",
+    "total_bsmt_sf",
+    "garage_area",
+    "year_built",
+    "overall_qual",
+    "ms_zoning",
+}
+
 # Tables are created automatically for the initial version.
 # In production, replace this with Alembic migrations.
 Base.metadata.create_all(bind=engine)
@@ -162,7 +171,14 @@ def update_order(
     data: schemas.OrderUpdate,
     db: Session = Depends(get_db),
 ):
-    """Update an existing order."""
+    """Update an existing order.
+
+    If any property field used for price prediction is changed,
+    the Forecast API is queried again with the resulting property
+    state and predicted_price is refreshed. If the Forecast API is
+    unavailable, the existing predicted_price is preserved instead
+    of being overwritten.
+    """
     order = crud.get_order(db, oid)
 
     if order is None:
@@ -171,10 +187,33 @@ def update_order(
             detail="Order not found.",
         )
 
+    update_fields = data.model_dump(exclude_unset=True)
+    property_changed = bool(PROPERTY_FIELDS & update_fields.keys())
+
+    new_price = None
+    price_updated = False
+
+    if property_changed:
+        merged = {
+            field: update_fields.get(field, getattr(order, field))
+            for field in PROPERTY_FIELDS
+        }
+        try:
+            new_price = _request_prediction(merged)
+            price_updated = True
+        except Exception as exc:
+            logger.error(
+                "Forecast service is unavailable during update: %s",
+                exc,
+            )
+            # predicted_price is left unchanged on the order.
+
     return crud.update_order(
         db,
         order,
         data,
+        new_price=new_price,
+        price_updated=price_updated,
     )
 
 
