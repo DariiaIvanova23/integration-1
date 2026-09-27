@@ -40,7 +40,7 @@ services:
     ports:
       - "${ORDERS_PORT:-8000}:8000"
     environment:
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
       FORECAST_URL: http://forecast-api:8001
       FORECAST_TIMEOUT: ${FORECAST_TIMEOUT:-3.0}
     depends_on:
