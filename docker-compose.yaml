@@ -22,10 +22,16 @@ services:
     ports:
       - "${FORECAST_PORT:-8001}:8001"
     healthcheck:
-      test: ["CMD", "false"]
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request as u; u.urlopen('http://localhost:8001/health')",
+        ]
       interval: 5s
       timeout: 3s
-      retries: 2
+      retries: 12
 
   orders-api:
     build:
