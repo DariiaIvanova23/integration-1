@@ -29,3 +29,6 @@ services:
       DATABASE_URL: ${DATABASE_URL}
       FORECAST_URL: http://forecast-api:8001
       FORECAST_TIMEOUT: ${FORECAST_TIMEOUT:-3.0}
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
