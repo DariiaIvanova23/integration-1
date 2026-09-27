@@ -67,12 +67,8 @@ def load_training_data() -> pd.DataFrame:
     return df[columns].dropna(subset=[TARGET])
 
 
-def train_model() -> Pipeline:
+def train_model(df: pd.DataFrame | None = None) -> Pipeline:
     """Build and train the Ridge regression pipeline.
-
-    Numerical features are imputed using the median and standardized.
-    Categorical features are imputed using the most frequent value and
-    one-hot encoded, with unknown categories ignored during inference.
     """
     preprocessor = ColumnTransformer(
         [
@@ -122,7 +118,8 @@ def train_model() -> Pipeline:
         ]
     )
 
-    df = load_training_data()
+    if df is None:
+        df = load_training_data()
 
     pipe.fit(
         df[NUM + CAT],
