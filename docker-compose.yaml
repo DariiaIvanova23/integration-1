@@ -23,12 +23,8 @@ services:
     build:
       context: .
       dockerfile: orders-service/Dockerfile
-    ports:
-      - "${ORDERS_PORT:-8000}:8000"
+    network_mode: host
     environment:
       DATABASE_URL: ${DATABASE_URL}
-      FORECAST_URL: http://forecast-api:8001
+      FORECAST_URL: http://localhost:8001
       FORECAST_TIMEOUT: ${FORECAST_TIMEOUT:-3.0}
-    dns:
-      - 8.8.8.8
-      - 1.1.1.1
